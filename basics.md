@@ -15,7 +15,7 @@ Let us explore RStudio's interface with an exercise:
 
 We'll start with one-dimensional objects, that is lists of values of the same type. For instance:
 - `["Economics", "Sociology", "History"]`
-- `[4 8 15 16 23 42]`. 
+- `[4, 8, 15, 16, 23, 42]`. 
 
 These one-dimensional lists of values can be represented by vectors. The four most common types of vectors in R are: 
 - numerical vectors 
@@ -31,7 +31,7 @@ In a second time, we'll look at more complex data structures that are in fact th
 
 R has different types of numerical objects. For data analysis, we will mainly make use of the following two types:
 - integers (called `int`)
-- real numbers (called `double')
+- real numbers (called `double`)
 
 In practice the former are a special case of the latter. 
 
@@ -134,10 +134,10 @@ The order of operations follows usual conventions:
 R start becoming very handy when it comes to vector arithmetic. Let us consider that vectors are sequences of numbers placed in a column:
 
 $$
-\begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}
+\begin{bmatrix} x_1 \\\ x_2 \\\ \vdots \\\ x_n \end{bmatrix}
 $$
 
-We will now apply operations on each line of this vector. We talk about vectorization of operations to talk about an operation that will automatically be applied to each element of a vector.
+We will now apply operations on each line of this vector. We talk about **vectorization** of operations to talk about an operation that will automatically be applied to each element of a vector.
 
 For instance, multiplications are vectorized by default:
 ```r
@@ -156,10 +156,11 @@ c(1,20,2) - 3
 >```r
 >c(1,20,2) - c(1,20)
 >```
+>This might print an error for you but if you assign it to a variable the vectors are correctly recycled. We'll cover variable assignment in a moment.
 
 ## Character vectors
 
-Character vectors are used to store textual information. More precisely, they can store every [Unicode](https://en.wikipedia.org/wiki/Unicode) character, (this  includes letters from different languages, punctuation, figures, smileys, etc.)
+Character vectors are used to store textual information. More precisely, they can store every [Unicode](https://en.wikipedia.org/wiki/Unicode) character (this  includes letters from different languages, punctuation, figures, smileys, etc.)
 
 ### Create a *string*
 
@@ -226,8 +227,8 @@ nchar(c("I have 20 characters", "I don't"))
 Among the common operation we perform when working with text, we often want to transform all our text. For instance we might want to capitalize all the text or rather remove all capitalization. We can do it as follows:
 
 ```r
-toupper(c("sequence 850", "Sequence 850")) # <1>
-tolower(c("SEQuEnce 850", "SEQUENCE 850")) # <2>
+toupper(c("sequence 850", "Sequence 850"))
+tolower(c("SEQuEnce 850", "SEQUENCE 850")) 
 ```
 
 There are also some basic function to clean up textual vectors:
@@ -276,10 +277,10 @@ In R, logical vectors are used to store boolean values (that is `TRUE` or `FALSE
 
 Logical vectors are mainly used for logical operations, data filtering and conditional selection. We shall come back to this, but we will be using them a lot but more indirectly.
 ```r
-5 > 3  # <1>
-2 == 2 # <2> 
-0 == (2 - 2) # <3>
-1 < 0 # <4>
+5 > 3  
+2 == 2  
+0 == (2 - 2)
+1 < 0 
 ```
 
 We can also do comparisons with vectors:
@@ -400,10 +401,9 @@ y + z
 
 In R vectors have indexes that allow accessing specific elements using their position in the vector. 
 
-Indexes start at 1 meaning that the first vector element has an index of 1, the second one 2, etc.[^noteindice].
+Indexes start at 1 meaning that the first vector element has an index of 1, the second one 2, etc.[^noteindice]
 
-[^noteindice]: 
-  This might seem obvious but it is not in computer science. In other languages (Python, C) indexing starts at 0.
+[^noteindice]: This might seem obvious but it is not in computer science. In other languages (Python, C) indexing starts at 0.
 
 ```r
 x <- 2*seq(1,10)
@@ -440,8 +440,8 @@ x[c(2,3,8)]
 We can also make negative selections that is selecting all values but some. To do this use negative numbers.
 
 ```r
-x[-1] # <1>
-x[c(-3, -1)] # <2>
+x[-1] 
+x[c(-3, -1)] 
 ```
 
 It is however often difficult to use index positions solely. Indeed say you have a vector of length 1,000, you might be unclear at which position a certain value is. 
@@ -528,9 +528,9 @@ typeof(3.5)
   <summary>Exercise 3: solution</summary>
 
 ```r
-x1 <- "une première chaîne"
-x2 <- "et une deuxième"
-x3 <- "jamais deux sans trois"
+ x1 <- "a first character string"
+ x2 <- "a second one "
+ x3 <- "and a third one that is also the last"
 nchar(paste(x1, x2, x3, sep = ""))
 ```
 </details>
@@ -609,9 +609,7 @@ Let us define a matrix `X`:
 1. Select the first element of the matrix (first row, first column)
 2. Select the first row
 3. Select the first column
-4. Select the elements at the intersection of:
-  1. the 2nd and 3rd row
-  2. the 1st and 3rd column
+4. Select the elements at the intersection of: the 2nd and 3rd row and the 1st and 3rd column
 
 <details>
   <summary>Exercise 6: solution</summary>
@@ -649,18 +647,18 @@ my_list <- list(
   <summary>Exercise 7: solution </summary>
   
 ```r
-#Question 1: afficher la liste
-ma_liste
-# Question 2: Accéder au deuxième élément de la liste
-ma_liste[[2]]
-ma_liste[[4]][2]
-# Question 3: mettre à jour la liste avec un élément nommé et y accéder
-ma_liste[['communes']] <- c(
+#Question 1
+my_list
+# Question 2
+my_list[[2]]
+my_list[[4]][2]
+# Question 3
+my_list[['communes']] <- c(
   '01363', '02644', '03137', '11311'
   )
-ma_liste[['communes']]  
-# Question 4: effectuer une opération 
-ma_liste[['departements']] <- substr(ma_liste[['communes']] , start = 1, stop = 2)
+my_list[['communes']]  
+# Question 4
+my_list[['departements']] <- substr(my_list[['communes']] , start = 1, stop = 2)
 ```
 </details>
 
@@ -679,24 +677,24 @@ In this exercise we will see how we can apply the same function to all elements 
 2. How many elements do each of our list element contain? 
 3. Create a numerical vector equal to 1 if the list element is of type "double" and 0 otherwise. 
 
-
->[!tip]-
+>[!TIP]
 >Here is an example of using `lapply` to do the sum of each element in our list: 
 >```r
 >my_list <- list(c(1, 2), seq(1, 10))
->lapply(ma_liste_nombres, sum)
+>lapply(my_list_numbers, sum)
 >```
+
 
 <details>
   <summary>Exercise 8: solution</summary>
 
 ```r
 # Question 1
-longueur_liste <- length(ma_liste)
+length_list <- length(my_list)
 # Question 2
-lapply(ma_liste, length)
+lapply(my_list, length)
 as.numeric(
-	lapply(ma_liste, function(l) typeof(l) == "double")
+	lapply(my_list, function(l) typeof(l) == "double")
 	)
 ```
 </details>
@@ -739,14 +737,14 @@ You can also use RStudio's viewer pour to show a data set. This viewer however c
 >df[sample(nrow(df), 3), ]
 >```
 
-In terms of structure a data.frame is in fact a list of which all elements are the same size. This allows representing the data in a table.
+In terms of structure a dataframe is in fact a list of which all elements are the same size. This allows representing the data in a table.
 
 ```r
 is.list(df)
 lapply(df, length)
 ```
 
-data.frame thus have both lists and matrices capabilities. We shall see it in the following exercise: 
+Dataframes thus have both lists and matrices capabilities. We shall see it in the following exercise: 
 
 ### Exercise 10
 Using the dataframe `df` we created earlier: 
@@ -763,14 +761,17 @@ Using the dataframe `df` we created earlier:
   dim(df)
   nrow(df)
   ncol(df)
-  length(df) #comme une liste
+  length(df) #like a list
+  df[2, 3] #like a matrix
   df[3, c("var1","var2")]
   ```
 
 </details>
 
+
+
 Dataframe can be easily modified. The most classical operations to which we shall come back in the following chapter are: 
-- creating a new column based on existing ones.
+- creating a new column based on existing ones
 - Select a subset of the data
 
 There are several ways to refer to an existing column in a dataframe. The simplest one use the structure `dataframe$column`. This gives a vector and we know how to work with them.
@@ -778,12 +779,6 @@ There are several ways to refer to an existing column in a dataframe. The simple
 ```r
 class(df$var1)
 ```
-### Exercice 11
-
-1. Create a column `var4` in our dataset that compute that square the values of `var1` 
-2. Create a column `var5` in our dataset that concatenates the first two variables and generalises the scheme `1=a`.
-3. Create a dataframe `df_small1` for the rows where `var3`is `TRUE`.
-4. Create a dataframe`df_small2` for the rows where `var1` is even
 
 In the next chapter we will introduce the ecosystem of the `tidyverse` and it's famous package `dplyr`.
 This ecosystem greatly contributed to making R one of the two major statistical language (the other begin Python).
