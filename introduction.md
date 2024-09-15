@@ -49,7 +49,7 @@ ChatGPT and the likes are game-changers when it comes to coding. You should howe
 
 ## References
 
-This class is a shameless translation of Lino Galiana's introduction to R (in French). You can find it here: https://rgeo.linogaliana.fr/
+This class is a translation of Lino Galiana's introduction to R (in French). You can find it here: https://rgeo.linogaliana.fr/
 
 To learn about econometrics with R: 
 - https://www.econometrics-with-r.org/index.html
