@@ -483,7 +483,7 @@ ggplot(df_long_summary) +
      stat ='identity'
    )
  ```
- 4. For each department, keep the most polluting sector.
+ 3. For each department, keep the most polluting sector.
  
 <details>
   <summary>Exercise 5: solution</summary>
