@@ -1,6 +1,6 @@
 # An introduction to `ggplot2`
 
-In this tutorial, we will learn how to create synthetic graphical representations using R, which is very well equipped in this field thanks to the `ggplot2` library. The latter implements a [grammar of graphics](https://fr.wikibooks.org/wiki/Programmer_en_R/Comprendre_la_grammaire_des_graphiques) that is flexible, coherent, and easy to use.
+In this tutorial, we will learn how to create synthetic graphical representations using R, which is very well equipped in this field thanks to the `ggplot2` library. The latter implements a [grammar of graphics](https://en.wikibooks.org/wiki/R_Programming/Grammar_of_graphics) that is flexible, coherent, and easy to use.
 
 In this course, the practice of visualization will be done by replicating graphs found on the *open data* page of the City of Paris [here](https://opendata.paris.fr/explore/dataset/comptage-velo-donnees-compteurs/dataviz/?disjunctive.id_compteur&disjunctive.nom_compteur&disjunctive.id&disjunctive.name).
 
@@ -13,7 +13,6 @@ library(dplyr)
 library(forcats)
 library(lubridate)
 library(ggplot2)
-library(plotly)
 ```
 
 > [!NOTE]
@@ -23,6 +22,89 @@ library(plotly)
 >
 > This [blog post](https://blog.datawrapper.de/text-in-data-visualizations/) is a useful resource to consult regularly. This [blog post by Albert Rapp](https://albert-rapp.de/posts/ggplot2-tips/10_recreating_swd_look/10_recreating_swd_look) clearly demonstrates how to gradually build a good data visualization.
 
+## A first example to understand ggplot's philosophy
+
+Let's load some INSEE data (we're really not interested in what it corresponds to here, we'll just build a graph step by step):
+
+```r
+library(doremifasol)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+df <- telechargerDonnees("FILOSOFI_DISP_IRIS", date = 2017) %>%
+  as_tibble() %>%
+  sample_frac(0.1)
+```
+A explained in greater details on ggplot2's [`getting started`](https://ggplot2.tidyverse.org/articles/ggplot2.html) page, ggplot2's graphs should be built layer by layer. 
+
+First we need to initialize a figure linked to some data and specify which variables will be represented with geometric objects:
+```r
+ggplot(df, aes(x = DISP_MED17, y = DISP_D917))
+```
+
+Then we can add layers that will draw the data using the `geom_*` functions: 
+```r
+ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
+  geom_point()
+
+# OR
+
+ggplot(df) +
+  geom_point(aes(x = DISP_MED17, y = DISP_D917))
+```
+> [!NOTE]
+> In a `geom` layer:
+> - aes parameters control parameters related to a variable
+> - other options control fixed elements applied to the whole layer 
+
+Adding some options: 
+```r
+ggplot(df) +
+  geom_point(aes(x = DISP_MED17, y = DISP_D917, color = DISP_Q117), shape = 3)
+```
+
+Adding another layer:
+```r
+ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
+  geom_point(aes(color = DISP_Q117), shape = 3) +
+  geom_smooth(color = "red", alpha = 0.7, se = FALSE)
+```
+
+Next you can modify the scale using `scale_` functions: 
+```r
+ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
+  geom_point(aes(color = DISP_Q117), shape = 3) +
+  geom_smooth(color = "red", alpha = 0.7, se = FALSE) +
+  scale_x_continuous(labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_y_continuous(trans='log', labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_color_viridis_c()
+```
+
+Let's modify a bit the df to add even more information to the graph:
+```r
+df <- df %>% mutate(quartile = factor(ntile(DISP_Q117, 4)))
+ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
+  geom_point(aes(color = quartile), shape = 3) +
+  geom_smooth(color = "red", alpha = 0.7, se = FALSE) +
+  scale_x_continuous(labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_y_continuous(trans='log', labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_color_viridis_d(option = "turbo")
+```
+
+Only at the end do we then modify the aesthetic of the graph: 
+```r
+p <- ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
+  geom_point(aes(color = quartile), shape = 3) +
+  geom_smooth(color = "red", alpha = 0.7, se = FALSE) +
+  scale_x_continuous(labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_y_continuous(trans='log', labels = unit_format(unit = "k", scale=1e-3)) +
+  scale_color_viridis_d(option = "turbo")
+
+p + theme_bw() +
+  labs(x = "Revenu médian", y = "9e décile", color = "Quartile") +
+  theme(legend.position = "bottom")
+```
 
 ## Data
 
@@ -37,6 +119,7 @@ url <- "https://minio.lab.sspcloud.fr/projet-formation/diffusion/python-datascie
 download.file(url, "bike.gz") # <1>
 ```
 1. The `.gz` extension is important for the next step as `readr` needs it to understand that the file is compressed.
+
 
 ## Initial Graphical Productions
 
@@ -66,19 +149,9 @@ df1 <- df %>%
   head(10)
 ```
 
-<details>
-<summary>
-The top 10 stations after question 2
-</summary>
-  
-```r
-head(df1)
-```
-</details>
-
 Now, we can focus on producing the representation.
 
-3. First, without worrying about style or the beauty of the graph, create the structure of the barplot from the [data analysis page](https://opendata.paris.fr/explore/dataset/comptage-velo-donnees-compteurs/dataviz/?disjunctive.id_compteur&disjunctive.nom_compteur&disjunctive.id&disjunctive.name):
+3. First, without worrying about style or the beauty of the graph, create the structure of the barplot from the [data analysis page](https://opendata.paris.fr/explore/dataset/comptage-velo-donnees-compteurs/dataviz/?disjunctive.id_compteur&disjunctive.nom_compteur&disjunctive.id&disjunctive.name) Note: use the function [`geom_col`](https://ggplot2.tidyverse.org/reference/geom_bar.html): 
 
 <details>
 <summary>
@@ -87,7 +160,7 @@ Figure obtained without focusing on style
 
   ```r
 ggplot(df1, aes(y = `Nom du compteur`, x = `Comptage horaire`)) +
-  geom_bar(stat = "identity")
+  geom_col()
 ```
 </details>
 
@@ -137,7 +210,7 @@ We are starting to get something that conveys a synthetic message about the natu
 
 The figure now conveys a message, but it is still not very readable.
 
-1. The minimum requirement for someone unfamiliar with the data to understand the graphical representation is to label the axes. Create the same axis labels as in the original figure.
+1. The minimum requirement for someone unfamiliar with the data to understand the graphical representation is to label the axes. Create the same axis labels as in the original figure. Note: use the `labs`function.
 
 <details>
 <summary>
@@ -156,7 +229,7 @@ figure1
 
 </details>
 
-2. The gray background is a distinctive mark that the graph was created with `ggplot2`, but it’s not very polished. Use a more minimalist theme to achieve a white background.
+2. The gray background is a distinctive mark that the graph was created with `ggplot2`, but it’s not very polished. Use a more minimalist theme to achieve a white background. See themes [here](https://ggplot2.tidyverse.org/reference/ggtheme.html):
 
 <details>
 <summary>
@@ -200,7 +273,7 @@ figure1
 
 </details>
 
-4. Finally, let's add some complexity to the graph by displaying numbers on the bars. Using this [post](https://stackoverflow.com/questions/67767859/adding-text-on-each-bar-in-horizontal-bar-plot-in-ggplot) as guidance, add the average hourly counts as seen in the open data Parisian figure[^annotation].
+4. (optional and difficult) Finally, let's add some complexity to the graph by displaying numbers on the bars. Using this [post](https://stackoverflow.com/questions/67767859/adding-text-on-each-bar-in-horizontal-bar-plot-in-ggplot) as guidance, add the average hourly counts as seen in the open data Parisian figure[^annotation].
 
 ```r
 figure1 <- figure1 + 
@@ -216,16 +289,11 @@ figure1 <- figure1 +
 </details>
 
 
-We now understand that the Boulevard de Sébastopol is the most frequently used, which won’t surprise you if you cycle in Paris. However, if you are unfamiliar with Parisian geography, this information may not be very useful to you—you’ll need an additional graphical representation: a map! We will see this in a future chapter.
-
-```r
-#| fig-cap: "The 10 counters with the highest hourly average"
-figure1
-```
+We now understand that the Boulevard de Sébastopol is the most frequently used, which won’t surprise you if you cycle in Paris.
 
 ### Exercise 3: Produce a new figure
 
-Do the same for figure 2 ("The 10 counters with the most recorded bikes") to obtain a similar figure.
+1. Do the same for figure 2 ("The 10 counters with the most recorded bikes") to obtain a similar figure.
 
 <details>
 
@@ -250,15 +318,6 @@ figure2 <- ggplot(df2, aes(y = reorder(`Nom du compteur`, `Comptage horaire`), x
         plot.title = element_text(hjust = 0.5),
         plot.margin = margin(1, 4, 1, 1, "cm"))
 ```
-
-<summary>
-Figure 2 after completing this exercise
-</summary>
-
-```r
-figure2
-```
-
 </details>
 
 Bar charts (_barplot_) are extremely common, but what do they convey? From a semiological perspective, _lollipop charts_ are preferable: they convey the same information but with less noise (the width of the bars in the barplot tends to obscure the information slightly).
@@ -288,20 +347,6 @@ figure2_lollipop <- ggplot(df2_lollipop, aes(x = x, y = y)) +
 figure2_lollipop
 ```
 
-<details>
-<summary>
-Comparison of the _barplot_ and the _lollipop chart_
-</summary>
-```r
-figure2
-figure2_lollipop
-```
-</details>
-
-### Exercise 3 bis (optional): produce a _lollipop chart_
-
-Redo exercise 2 but instead of a _barplot_, produce a _lollipop chart_.
-
 ## First Temporal Aggregation
 
 We will now focus on the spatial dimension of our dataset through two approaches:
@@ -313,34 +358,31 @@ To start, let's reproduce the third figure, which is again a _barplot_. The firs
 
 ### Exercise 4: Barplot of Monthly Counts
 
-1. Use the `format` function to create a `month` variable following the format `2019-08`, for example;
-2. Calculate the average hourly counts for each month.
+Let us now reproduce the 3rd graph of the [data analysis page](https://opendata.paris.fr/explore/dataset/comptage-velo-donnees-compteurs/dataviz/?disjunctive.id_compteur&disjunctive.nom_compteur&disjunctive.id&disjunctive.name).
 
+Let's use the `format` function to create a `month` variable following the format `2019-08`:
 ```r
 df <- df %>%
   mutate(month = format(`Date et heure de comptage`, "%Y-%m"))
 ```
 
+1. Let's see if you remember how to use dplyr ! Calculate the average hourly counts for each month.
+
+<details>
+<summary>Question 1 solution</summary>
+  
 ```r
-# Question 2
 comptage_horaires_mois <- df %>%
   group_by(month) %>%
   summarise(value = mean(`Comptage horaire`, na.rm = TRUE))
 ```
+</details>
+  
+2. Reproducing a bit the steps we took in exercise 2, reproduce the 3rd example on the page.
 
 <details>
-<summary>
-Hourly counts obtained after this question
-</summary>
-
-```r
-comptage_horaires_mois
-```
-
-</details>
-
-Apply the previous advice to gradually construct and improve a graph in order to obtain a figure similar to the 3rd example on the Paris Open Data page.
-
+<summary>Question 2 solution</summary>
+  
 ```r
 figure3 <- ggplot(comptage_horaires_mois) +
   geom_bar(aes(x = month, y = value), fill = "#ffcd00", stat = "identity") +
@@ -352,48 +394,21 @@ figure3 <- ggplot(comptage_horaires_mois) +
         plot.title = element_text(hjust = 0.5),
         plot.margin = margin(1, 4, 1, 1, "cm"))
 ```
-
-<details>
-<summary>
-Example of a figure reproducing the Paris Open Data
-</summary>
-
-```r
-figure3
-```
-
 </details>
 
-- Optional Question: Represent the same information in the form of a _lollipop chart_
-
-```r
-figure3
-```
-
-If you prefer to represent this as a _lollipop chart_[^notecouleur]:
-
-```r
-ggplot(comptage_horaires_mois, aes(x = month, y = value)) +
-  geom_segment(aes(xend = month, yend = 0)) +
-  geom_point(color = "#ffcd00", size = 4) +
-  labs(x = "Date and Time of Counting", y = "Monthly Average of Hourly Counts\nfor the Selected Period",
-       title = "Monthly Average of Bike Counts") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title = element_text(hjust = 0.5),
-        plot.margin = margin(1, 4, 1, 1, "cm"))
-```
-
-[^notecouleur]: I removed the color from the y-axis label, which I feel adds little to the figure and may degrade the clarity of the message.
 
 ## First Time Series
 
 It is more common to represent data with a temporal dimension as a time series.
 
+
 ### Exercise 5: Representing a Time Series
 
-1. Create a `day` variable that transforms the timestamp into a daily format such as `2021-05-01`.
+1. Create a `day` variable that transforms the timestamp into a daily format such as `2021-05-01`. Note: use the `date` function from the `lubridate` package.
 
+<details>
+  <summary>Solution to question 1</summary>
+  
 ```r
 df <- df %>%
   mutate(day = date(`Date et heure de comptage`))
@@ -402,41 +417,35 @@ moyenne_quotidienne <- df %>%
   group_by(day) %>%
   summarise(value = mean(`Comptage horaire`, na.rm = TRUE))
 ```
+</details>
 
-2. Represent this information as a time series, without worrying about the style of the figure.
+2. Represent this information as a time series, without worrying about the style of the figure. Note: use `geom_line`:
 
+<details>
+  <summary>Solution to question 2</summary>
+  
 ```r
 figure4 <- ggplot(moyenne_quotidienne, aes(x = day, y = value)) +
   geom_line(color = "magenta")
 ```
+</details>
+  
+3. Fill the area under the line with the appropriate function. This time I let you find which function to use.
 
 <details>
-<summary>
-Minimalist figure
-</summary>
-```r
-figure4
-```
-</details>
-
-3. Fill the area under the line with the appropriate function.
-
+  <summary>Solution to question 3</summary>
+  
 ```r
 figure4 <- figure4 +
   geom_area(fill="magenta", alpha = 0.6)
 ```
-
-<details>
-<summary>
-Figure with area under the line filled
-</summary>
-```r
-figure4
-```
 </details>
 
-4. Finalize the graph to replicate the figure from the Open Data page.
+4. Finalize the graph to replicate the figure from the Open Data page. (Add labels and theme).
 
+<details>
+  <summary>Solution to question 4</summary>
+  
 ```r
 figure4 <- figure4 +
   labs(x = "Date and Time of Counting (Day)", y = "Daily Average of Hourly Counts\nfor the Selected Period",
@@ -446,43 +455,4 @@ figure4 <- figure4 +
         plot.title = element_text(hjust = 0.5),
         plot.margin = margin(1, 4, 1, 1, "cm"))
 ```
-
-<details>
-<summary>
-Finalized figure
-</summary>
-```r
-figure4
-```
 </details>
-
-Here are some tips for this exercise:
-
-<details>
-<summary>
-💡 Tip for question 1
-</summary>
-Check out the `day` function from the `lubridate` package.
-</details>
-
-<details>
-<summary>
-💡 Tip for question 3
-</summary>
-[This thread on StackOverflow](https://stackoverflow.com/questions/28730083/filling-in-the-area-under-a-line-graph-in-ggplot2-geom-area) can help you.
-</details>
-
-<details>
-<summary>
-The dataset for figure 4
-</summary>
-```r
-head(moyenne_quotidienne)
-```
-</details>
-
-At the end of this exercise, you will have a figure that looks like this:
-
-```r
-figure4
-```
