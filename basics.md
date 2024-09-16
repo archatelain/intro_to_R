@@ -781,4 +781,4 @@ class(df$var1)
 ```
 
 In the next chapter we will introduce the ecosystem of the `tidyverse` and it's famous package `dplyr`.
-This ecosystem greatly contributed to making R one of the two major statistical language (the other begin Python).
+This ecosystem greatly contributed to making R one of the two major statistical language (the other being Python).
