@@ -189,9 +189,9 @@ The cheatsheet on this [page](https://dplyr.tidyverse.org/) is very useful as it
 
 ### Exercise 2: Exploring `dplyr` verbs for data manipulation
 
-First, let’s get familiar with operations on columns.
+First, let’s get familiar with operations on columns. Each of these questions makes us of one of the verbs above.
 
-1. Create a _dataframe_ `emissions_copy` keeping only the columns `INSEE commune`, `Commune`, `Autres transports`, and `Autres transports international`.
+1. Create a _dataframe_ `emissions_copy` keeping only the columns `INSEE commune`, `Commune`, `Autres transports`, and `Autres transports international`. Note: Use backticks for column names with spaces.
 
 2. Since the variable names are not very practical, rename them as follows:
     + `INSEE commune` $\to$ `code_insee`
@@ -279,15 +279,15 @@ Since `readr` or `doremifasol` automatically handled the data import, we’ll no
  
  Next, we check the dimensions of the `DataFrames` and the structure of some key variables. In particular, the fundamental variables for linking our data are the communal variables. Here, we have two geographical variables: a commune code and a commune name. We’ll check if they are well-suited for statistical analysis.
  
- 3. Check the dimensions of the _dataframes_;
- 4. Check the number of unique values of the geographical variables in each dataset. Do the results appear consistent?
- 5. In `filosofi`, identify the commune names that correspond to multiple commune codes and select their codes. In other words, identify the `CODGEO` where there are duplicates in `LIBGEO` and store them in a dataframe called `duplicates`.
+ 3. Check the dimensions of the _dataframes_
+ 4. Check the number of unique values of the geographical variables in each dataset. Do the results appear consistent? Note: you can use the function `n_distinct()` here on top of the common verbs of the `tidyverse`.
+ 5. In `filosofi`, identify the commune names that correspond to multiple commune codes and select their codes. In other words, identify the `CODGEO` where there are duplicates in `LIBGEO` and store them in a dataframe called `duplicates`. Note: this question is difficult and there are several ways to answer it. 
  
  We’ll focus temporarily on the observations where the label corresponds to more than two different commune codes.
  
- 6. Examine these observations in `filosofi`. To make this clearer, reorder the obtained dataset alphabetically.
- 7. Determine the average size (variable number of people: `NBPERSMENFISC16`) and some descriptive statistics of these data. Compare this with the same statistics for the data where the labels and commune codes match.
- 8. Check the large cities (more than 100,000 people), the proportion of cities where the same name is associated with different commune codes.
+ 6. Examine these observations in `filosofi`. To make this clearer, reorder the obtained dataset alphabetically. Note: Here you need to find a clever way to select the correct rows. The `%in%` operator can prove useful here. 
+ 7. Determine the average size (variable number of people: `NBPERSMENFISC16`) and some descriptive statistics of these data. Compare this with the same statistics for the data where there are no duplicates.
+ 8. Now, among large cities (more than 100,000 inhabitants), how many of them have a duplicate? What proportion of large cities does this represent?
  9. In `filosofi`, check the cities where the label is equal to Montreuil. Also check those that contain the term 'Saint-Denis'.
 
 <details>
@@ -374,9 +374,12 @@ This exercise reassures us that the duplicated labels are in fact identical comm
  
  Let's begin calculating our first descriptive statistics.
  
- 3. Calculate the total emissions by sector for each department. Log these results into an object called `emissions_log`.
+ 3. Calculate the total emissions by sector for each department. Log these results into an object called `emissions_log`. Note: Here you should use [`across`](https://dplyr.tidyverse.org/reference/across.html).
  
- 4. Starting from the `emissions` dataset, calculate the total emissions by department and produce a list of the top 10 CO2 emitters and the 5 departments with the lowest emissions. Without performing a *merge*, examine the characteristics of these departments (population and standard of living).
+ 4. Starting from the `emissions` dataset, calculate the total emissions by department and produce a list of the top 10 CO2 emitters and the 5 departments with the lowest emissions. Without performing a *merge*, examine the characteristics of these departments (population and standard of living). Note: To compute sums per row you can make use of the following code:
+```r
+mutate(total = rowSums(pick(where(is.numeric)), na.rm = TRUE))
+```
  
  [^stringr]: The limited capabilities of the base language for text manipulation quickly become restrictive. Thus, we often switch to `stringr`, even if that is not the main focus of the chapter.
 
@@ -405,23 +408,46 @@ This exercise reassures us that the duplicated labels are in fact identical comm
   #Question 4
   ## Total emissions by department
   emissions_dep <- emissions %>%
-   mutate(total = rowSums(pick(where(is.numeric)), na.rm = TRUE)) %>%
-   group_by(dep) %>%
-   summarise(total = sum(total))
+	mutate(total = rowSums(pick(where(is.numeric)), na.rm = TRUE)) %>%
+	group_by(dep) %>%
+	summarise(total = sum(total))
+
+################
+## Comment: the function here 'rowSums' is a base R function. We could argue that we should not mix base R functions with dplyr ones.
+## Here are two variants that do the same thing but stay in the tidyverse ecosystem:
+## - using `purrr`:
+mutate(total = reduce(across(where(is.numeric)), `+`, .init = 0))
+
+## using only `dplyr`:
+emissions_dep <- emissions %>%
+  rowwise() %>%
+  mutate(total = sum(c_across(where(is.numeric)), na.rm = TRUE)) %>%
+  ungroup()
+##################
+
   gros_emetteurs <- emissions_dep %>%
-   arrange(desc(total)) %>%
-   head(10)
+	   arrange(desc(total)) %>%
+	   head(10)
+
   petits_emetteurs <- emissions_dep %>%
-   arrange(total) %>%
-   head(5)
+	   arrange(total) %>%
+	   head(5)
   
   ## Characteristics of these departments in filosofi
   gros_emetteurs_filosofi <- filosofi %>%
-   filter(dep %in% gros_emetteurs$dep) %>%
-   group_by(dep) %>%
-   summarise(across(c('NBPERSMENFISC16','MED16'), \(x) mean(x, na.rm = TRUE)))
+	   filter(dep %in% gros_emetteurs$dep) %>%
+	   group_by(dep) %>%
+	   summarise(across(c('NBPERSMENFISC16','MED16'), \(x) mean(x, na.rm = TRUE)))
   
   head(gros_emetteurs_filosofi)
+
+## The solution above is a fancy solution that makes use of a lambda function \(x). The simpler solution also works:
+  gros_emetteurs_filosofi <- filosofi %>%
+	   filter(dep %in% gros_emetteurs$dep) %>%
+	   group_by(dep) %>%
+	   summarise(mean_pop = mean(NBPERSMENFISC16, na.rm = TRUE),
+		     mean_med = mean(MED16, na.rm = TRUE))
+
 ```
 </details>
 
@@ -441,22 +467,24 @@ An example of the distinction between the two can be found in Hadley Wickham's r
 
 In R, we often need to restructure data, either by lengthening it (_wide to long_) or by widening it (_long to wide_). The _tidyr_ package (part of the _tidyverse_) allows these kinds of transformations.
 
-The following cheat sheet helps recall the functions to use if needed:
-
-![](https://scienceparkstudygroup.github.io/r-lesson-based-on-ohi-data-training/img/rstudio-cheatsheet-spread-gather-sep-unite.png){width="80%" fig-align="center"}
-
 Switching from *wide* to *long* format (or vice versa) can be extremely useful because certain functions are more suitable for one data format over the other.
 
 In general, *long* formats are often preferable because it is easier to iterate over rows than columns due to the vectorized nature of R. This is especially the preferred format when preparing data for visualizations with `ggplot`, which we will explore in the next chapter.
 
 ### Exercise 5: The transformation from *wide to long*
  
- 1. Restructure the data into *long* format to have emissions data by sector, keeping the commune as the level of analysis (be mindful of other identifying variables).
- 2. Sum the data by sector and create a graphical representation using a _barplot_[^barplot].
- 3. For each department, keep the most polluting sector.
+ 1. Restructure the data into *long* format to have emissions data by sector, keeping the commune as the level of analysis (be mindful of other identifying variables). Note: use the function `pivot_longer` from the package `tidyr`
+ 2. Sum the data by sector and create a barplot using the following code:
+ ```r
+library(ggplot2)
+ggplot(df_long_summary) +
+   geom_bar(
+     aes(y = secteur, x = emissions),
+     stat ='identity'
+   )
+ ```
+ 4. For each department, keep the most polluting sector.
  
- [^barplot]: You can directly use the help code snippet if you're not familiar with `ggplot`.
-
 <details>
   <summary>Exercise 5: solution</summary>
 
@@ -486,25 +514,6 @@ In general, *long* formats are often preferable because it is easier to iterate 
  ```
 </details>
 
-
-<details>
-  <summary>Graph to create for question 2</summary>
-
-   ```r
- ggplot(df_long_summary) +
-   geom_bar(
-     aes(y = secteur, x = emissions),
-     stat ='identity'
-   )
- ```
- 
- No need to go further for now, as we will do more with `ggplot` later.
-
-</details>
-
-Once the `df_long_summary` dataframe is created, the minimal code to create the desired _barplot_ is:
- 
-
 # Combining Data
 
 It is becoming increasingly common to need to combine data from different sources rather than relying on a single database. Here, we will focus on the most favorable case, where information allows for an exact match between two datasets (otherwise, we would be dealing with the much more complex situation of fuzzy matching). The typical scenario involves matching two data sources based on an individual identifier or a commune code, as is the case here.
@@ -522,12 +531,7 @@ In the usual language of statisticians, we often use the terms *merge* or *join*
  
  First, we will calculate the carbon footprint for each commune.
  
- 1. Calculate the total emissions using the following command (since this is complex, we provide it directly):
- 
- ```r
- emissions <- emissions %>%
-   mutate(total = rowSums(pick(where(is.numeric)), na.rm = TRUE))
- ```
+ 1. Calculate the total emissions using `rowSums`once again.
  
  2. Perform a left join between the emissions data and the `filosofi` dataset[^notebiais].
  
@@ -549,7 +553,23 @@ In the usual language of statisticians, we often use the terms *merge* or *join*
  
  With a better understanding of our data, we are moving closer to inferential statistics. So far, we have constructed univariate statistics but have not examined relationships with other variables. This leads us to bivariate statistics, particularly correlation analysis. This work is important because any subsequent modeling will refine the correlation analysis to account for cross-correlations between multiple factors. We propose doing this analysis in a minimal way.
  
- 6. Look at the correlation between the framing variables and the carbon footprint (the solution is provided, as these manipulations are not straightforward). Do any variables appear to potentially influence the carbon footprint?
+ 6. Using the following code, look at the correlation between the framing variables and the carbon footprint. Do any variables appear to potentially influence the carbon footprint?
+
+```r
+correlations <- cor(
+	emissions_merged %>%
+		ungroup() %>%
+	 	select(where(is.numeric)),
+	use="complete.obs"
+	)[,'empreinte']
+ 
+ correlations <- enframe(correlations) %>%
+   filter(name %in% colnames(filosofi)) %>%
+   arrange(desc(abs(value)))
+
+ggplot(correlations) + geom_bar(aes(x = value, y = name), stat = "identity") +
+	scale_y_discrete(limits = correlations$name) 
+```
 
 <details>
   <summary>Exercise 6: solution</summary>
@@ -580,26 +600,5 @@ In the usual language of statisticians, we often use the terms *merge* or *join*
    mutate(empreinte_relative = empreinte/empreinte_mediane)
  
  emissions_merged %>% arrange(empreinte_relative)
- 
- #Question 6
- library(tibble)
- 
- correlations <- cor(
-   emissions_merged %>% ungroup() %>% select(where(is.numeric)),
-   use="complete.obs"
-   )[,'empreinte']
- 
- correlations <- enframe(correlations) %>%
-   filter(name %in% colnames(filosofi)) %>%
-   arrange(desc(abs(value)))
  ```
 </details>
-
-> [!NOTE]
-> Bonus
-> Here’s a quick visualization of the correlations with the carbon footprint:
-> 
-> ```r
-> ggplot(correlations) + geom_bar(aes(x = value, y = name), stat = "identity") +
->   scale_y_discrete(limits = correlations$name) 
-> ```
