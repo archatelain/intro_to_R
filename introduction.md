@@ -51,6 +51,12 @@ ChatGPT and the likes are game-changers when it comes to coding. You should howe
 
 This class is a translation of Lino Galiana's introduction to R (in French). You can find it here: https://rgeo.linogaliana.fr/
 
+The number one reference on R for data science:
+- https://r4ds.hadley.nz/
+
 To learn about econometrics with R: 
 - https://www.econometrics-with-r.org/index.html
 - https://bookdown.org/kieranmarray/intro_to_r_for_econometrics/workflow.html#writing-documents-with-rmarkdown
+
+On data vizualisation:
+- https://www.sudoc.abes.fr/cbs/xslt//DB=2.1/SET=1/TTL=1/SHW?FRST=2: a really nice book on dos and donts for data viz.
