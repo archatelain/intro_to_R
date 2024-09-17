@@ -574,7 +574,7 @@ correlations <- cor(
 	)[,'empreinte']
  
  correlations <- enframe(correlations) %>%
-   filter(name %in% colnames(filosofi)) %>%
+   filter(name %in% colnames(emissions_merged)) %>%
    arrange(desc(abs(value)))
 
 ggplot(correlations) + geom_bar(aes(x = value, y = name), stat = "identity") +
