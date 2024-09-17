@@ -84,6 +84,9 @@ ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
 Let's modify a bit the df to add even more information to the graph:
 ```r
 df <- df %>% mutate(quartile = factor(ntile(DISP_Q117, 4)))
+```
+And plot again the graph:
+```r
 ggplot(df, aes(x = DISP_MED17, y = DISP_D917)) +
   geom_point(aes(color = quartile), shape = 3) +
   geom_smooth(color = "red", alpha = 0.7, se = FALSE) +
