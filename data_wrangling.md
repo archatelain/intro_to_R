@@ -307,13 +307,23 @@ Since `readr` or `doremifasol` automatically handled the data import, we’ll no
  dim(emissions)
  
  #Question 4
+#Notice how we have more code communes than communes names in both datasets. This suggests we have duplicates.
  emissions %>%
-   select('INSEE commune', 'Commune') %>%
+   select('Commune') %>%
    summarize(Unique_Count = n_distinct(Commune))
+
+ emissions %>%
+   select('INSEE commune') %>%
+   summarize(Unique_Count = n_distinct('INSEE commune'))
  
  filosofi %>%
-   select('CODGEO', 'LIBGEO') %>%
+   select('LIBGEO') %>%
    summarize(Unique_Count = n_distinct(LIBGEO))
+
+ filosofi %>%
+   select('CODGEO') %>%
+   summarize(Unique_Count = n_distinct(CODGEO))
+ 
  
  # Question 5
  duplicates <- filosofi %>%
